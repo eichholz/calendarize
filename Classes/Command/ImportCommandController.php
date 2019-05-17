@@ -12,6 +12,7 @@ use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
 use TYPO3\CMS\Extbase\SignalSlot\Dispatcher;
+use Sabre\VObject;
 
 /**
  * Import.
@@ -68,22 +69,26 @@ class ImportCommandController extends AbstractCommandController
     /**
      * Prepare the events.
      *
-     * @param array $icalEvents
+     * @param VObject\Component\VEvent $icalEvents
      *
      * @return array
      */
-    protected function prepareEvents(array $icalEvents)
+    protected function prepareEvents(VObject\Component\VEvent $icalEvents)
     {
         $events = [];
         foreach ($icalEvents as $icalEvent) {
             $startDateTime = null;
             $endDateTime = null;
+            $uid = (string)$icalEvent->UID;
+            $summary = (string)$icalEvent->SUMMARY;
+            $description = (string)$icalEvent->DESCRIPTION;
+            $location = (string)$icalEvent->LOCATION;
             try {
-                $startDateTime = new \DateTime($icalEvent['DTSTART']);
-                $endDateTime = new \DateTime($icalEvent['DTEND']);
+                $startDateTime = new \DateTime((string)$icalEvent->DTSTART);
+                $endDateTime = new \DateTime((string)$icalEvent->DTEND);
             } catch (\Exception $ex) {
                 $this->enqueueMessage(
-                    'Could not convert the date in the right format of "' . $icalEvent['SUMMARY'] . '"',
+                    'Could not convert the date in the right format of "' . $summary . '"',
                     'Warning',
                     FlashMessage::WARNING
                 );
@@ -91,11 +96,12 @@ class ImportCommandController extends AbstractCommandController
             }
 
             $events[] = [
-                'uid' => $icalEvent['UID'],
+                'uid' => $uid,
                 'start' => $startDateTime,
                 'end' => $endDateTime,
-                'title' => $icalEvent['SUMMARY'],
-                'description' => $icalEvent['DESCRIPTION'],
+                'title' => $summary,
+                'description' => $description,
+                'location' => $location,
             ];
         }
 
@@ -107,17 +113,13 @@ class ImportCommandController extends AbstractCommandController
      *
      * @param string $absoluteIcalFile
      *
-     * @return array
+     * @return VObject\Property
      */
     protected function getIcalEvents($absoluteIcalFile)
     {
-        if (!\class_exists('ICal')) {
-            require_once ExtensionManagementUtility::extPath(
-                'calendarize',
-                'Resources/Private/Php/ics-parser/class.iCalReader.php'
-            );
-        }
-
-        return (array) (new \ICal($absoluteIcalFile))->events();
+        $vcalendar = VObject\Reader::read(
+            fopen($absoluteIcalFile, 'r')
+        );
+        return $vcalendar->VEVENT;
     }
 }

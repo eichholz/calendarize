@@ -18,6 +18,17 @@ use TYPO3\CMS\Extbase\Persistence\QueryInterface;
  */
 class EventRepository extends AbstractRepository
 {
+
+    public function findEventByImportId($importId)
+    {
+        $query = $this->createQuery();
+        $query->getQuerySettings()->setRespectStoragePage(false);
+        $query->matching($query->equals('import_id', $importId))
+            ->setLimit(1);
+        $result = $query->execute();
+        return $result->getFirst();
+    }
+
     /**
      * Get the IDs of the given search term.
      *

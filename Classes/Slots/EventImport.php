@@ -57,16 +57,17 @@ class EventImport
         $eventObject->setPid($pid);
         $eventObject->setTitle($event['title']);
         $eventObject->setDescription($this->nl2br($event['description']));
+        $eventObject->setLocation($event['location']);
 
         $configuration = $this->getConfiguration($pid, $event['start'], $event['end']);
         $eventObject->addCalendarize($configuration);
 
         if (null === $eventObject->getUid()) {
-            $this->eventRepository->update($eventObject);
-            $commandController->enqueueMessage('Update Event Meta data: ' . $eventObject->getTitle(), 'Update');
-        } else {
             $this->eventRepository->add($eventObject);
             $commandController->enqueueMessage('Add Event: ' . $eventObject->getTitle(), 'Add');
+        } else {
+            $this->eventRepository->update($eventObject);
+            $commandController->enqueueMessage('Update Event Meta data: ' . $eventObject->getTitle(), 'Update');
         }
 
         $this->persist();
@@ -121,7 +122,7 @@ class EventImport
      */
     protected function getEvent($importId)
     {
-        $eventObject = $this->eventRepository->findOneByImportId($importId);
+        $eventObject = $this->eventRepository->findEventByImportId($importId);
         if (!($eventObject instanceof Event)) {
             $eventObject = new Event();
         }
