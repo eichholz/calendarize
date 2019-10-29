@@ -10,10 +10,13 @@ namespace HDNET\Calendarize\Slots;
 use HDNET\Calendarize\Command\ImportCommandController;
 use HDNET\Calendarize\Domain\Model\Configuration;
 use HDNET\Calendarize\Domain\Model\Event;
+use HDNET\Calendarize\Domain\Repository\ConfigurationRepository;
 use HDNET\Calendarize\Domain\Repository\EventRepository;
 use HDNET\Calendarize\Utility\DateTimeUtility;
 use HDNET\Calendarize\Utility\HelperUtility;
+use TYPO3\CMS\Extbase\Object\ObjectManagerInterface;
 use TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager;
+use TYPO3\CMS\Extbase\Persistence\ObjectStorage;
 
 /**
  * Import default events.
@@ -35,6 +38,23 @@ class EventImport
     public function injectEventRepository(EventRepository $eventRepository)
     {
         $this->eventRepository = $eventRepository;
+    }
+
+    /**
+     * Configuration repository.
+     *
+     * @var \HDNET\Calendarize\Domain\Repository\ConfigurationRepository
+     */
+    protected $configurationRepository;
+
+    /**
+     * Inject configuration repository.
+     *
+     * @param ConfigurationRepository $configurationRepository
+     */
+    public function injectConfigurationRepository(ConfigurationRepository $configurationRepository)
+    {
+        $this->configurationRepository = $configurationRepository;
     }
 
     /**
@@ -60,12 +80,23 @@ class EventImport
         $eventObject->setLocation($event['location']);
 
         $configuration = $this->getConfiguration($pid, $event['start'], $event['end']);
-        $eventObject->addCalendarize($configuration);
 
         if (null === $eventObject->getUid()) {
+            $eventObject->addCalendarize($configuration);
             $this->eventRepository->add($eventObject);
             $commandController->enqueueMessage('Add Event: ' . $eventObject->getTitle(), 'Add');
         } else {
+            $eventObject->getCalendarize()->next();
+            var_dump($eventObject->getCalendarize()->toArray());
+//            foreach ($eventObject->getCalendarize() as $config) {
+//                var_dump($config);
+//                /** @var Configuration $config */
+//                $eventObject->getCalendarize()->detach($config);
+//                echo $config->getUid();
+//                echo "--";
+//            }
+//            $this->persist();
+//            $eventObject->addCalendarize($configuration);
             $this->eventRepository->update($eventObject);
             $commandController->enqueueMessage('Update Event Meta data: ' . $eventObject->getTitle(), 'Update');
         }

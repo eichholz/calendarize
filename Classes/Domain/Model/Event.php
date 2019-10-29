@@ -135,6 +135,10 @@ class Event extends AbstractModel implements FeedInterface, SpeakingUrlInterface
         $this->categories = new ObjectStorage();
     }
 
+    protected function initStorageObjects() {
+        $this->calendarize = new ObjectStorage();
+    }
+
     /**
      * Get title.
      *

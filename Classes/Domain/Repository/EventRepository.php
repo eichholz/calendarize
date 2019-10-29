@@ -22,7 +22,7 @@ class EventRepository extends AbstractRepository
     public function findEventByImportId($importId)
     {
         $query = $this->createQuery();
-        $query->getQuerySettings()->setRespectStoragePage(false);
+        $query->getQuerySettings()->setRespectStoragePage(false)->setIgnoreEnableFields(true);
         $query->matching($query->equals('import_id', $importId))
             ->setLimit(1);
         $result = $query->execute();
