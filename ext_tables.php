@@ -48,11 +48,11 @@ $categoryRegistry->add('calendarize', 'tx_calendarize_domain_model_pluginconfigu
         'web',
         'calendarize',
         '',
-        ['Backend' => 'list'],
+        ['Backend' => 'list,option'],
         [
             // Additional configuration
             'access' => 'user, group',
-            'icon' => 'EXT:calendarize/ext_icon.svg',
+            'icon' => 'EXT:calendarize/Resources/Public/Icons/Extension.svg',
             'iconIdentifier' => 'module-my_redirects',
             'labels' => 'LLL:EXT:calendarize/Resources/Private/Language/locallang_mod.xlf',
             'navigationComponentId' => ''

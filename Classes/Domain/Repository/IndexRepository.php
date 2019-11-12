@@ -11,6 +11,7 @@ use Exception;
 use HDNET\Calendarize\Domain\Model\Index;
 use HDNET\Calendarize\Utility\DateTimeUtility;
 use HDNET\Calendarize\Utility\ExtensionConfigurationUtility;
+use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Configuration\BackendConfigurationManager;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
@@ -48,6 +49,8 @@ class IndexRepository extends AbstractRepository
     protected $overridePageIds = [];
 
     /**
+     * Create query.
+     *
      * @return QueryInterface
      */
     public function createQuery()
@@ -86,9 +89,18 @@ class IndexRepository extends AbstractRepository
     public function findAllForBackend()
     {
         $query = $this->createQuery();
+        $query->getQuerySettings()->setIgnoreEnableFields(true);
         $query->getQuerySettings()->setRespectSysLanguage(false);
+        $query->getQuerySettings()->setLanguageOverlayMode(false);
+        $query->getQuerySettings()->setLanguageMode('ignore');
 
-        return $query->execute();
+        // Notice Selection without any language handling
+        unset($GLOBALS['TCA']['tx_calendarize_domain_model_index']['ctrl']['languageField']);
+        unset($GLOBALS['TCA']['tx_calendarize_domain_model_index']['ctrl']['transOrigPointerField']);
+
+        $result =  $query->execute();
+
+        return $result;
     }
 
     /**
@@ -294,7 +306,10 @@ class IndexRepository extends AbstractRepository
 
         $constraints = [];
 
-        $constraints[] = $query->equals('foreignUid', $event->getUid());
+        $localizedUid = $event->_getProperty('_localizedUid');
+        $selectUid = $localizedUid ? $localizedUid : $event->getUid();
+
+        $constraints[] = $query->equals('foreignUid', $selectUid);
         $constraints[] = $query->in('uniqueRegisterKey', $this->indexTypes);
         if (!$future) {
             $constraints[] = $query->lessThanOrEqual('startDate', $now);
@@ -369,7 +384,7 @@ class IndexRepository extends AbstractRepository
         $firstDay = DateTimeUtility::convertWeekYear2DayMonthYear($week, $year);
         $timezone = DateTimeUtility::getTimeZone();
         $firstDay->setTimezone($timezone);
-        if ($daysShift !== 0) {
+        if (0 !== $daysShift) {
             $firstDay->modify('+' . $daysShift . ' days');
         }
         $endDate = clone $firstDay;
@@ -382,17 +397,12 @@ class IndexRepository extends AbstractRepository
     /**
      * Find different types and locations.
      *
-     * @return array|\TYPO3\CMS\Extbase\Persistence\QueryResultInterface
+     * @return array
      */
-    public function findDifferentTypesAndLocations()
+    public function findDifferentTypesAndLocations(): array
     {
-        $query = $this->createQuery();
-
-        return $query
-            ->statement('SELECT *'
-                . 'FROM tx_calendarize_domain_model_index '
-                . 'GROUP BY pid,foreign_table')
-            ->execute();
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_calendarize_domain_model_index');
+        return (array) $queryBuilder->select('unique_register_key', 'pid', 'foreign_table')->from('tx_calendarize_domain_model_index')->groupBy('pid', 'foreign_table', 'unique_register_key')->execute()->fetchAll();
     }
 
     /**
@@ -402,8 +412,9 @@ class IndexRepository extends AbstractRepository
      * @param int $month
      * @param int $day
      *
-     * @return array|\TYPO3\CMS\Extbase\Persistence\QueryResultInterface
      * @throws Exception
+     *
+     * @return array|\TYPO3\CMS\Extbase\Persistence\QueryResultInterface
      */
     public function findDay(int $year, int $month, int $day)
     {
@@ -626,6 +637,13 @@ class IndexRepository extends AbstractRepository
      */
     protected function getSorting($direction, $field = '')
     {
+        if ('withrangelast' === $field) {
+            return [
+                'end_date' => $direction,
+                'start_date' => $direction,
+                'start_time' => $direction,
+            ];
+        }
         if ('end' !== $field) {
             $field = 'start';
         }

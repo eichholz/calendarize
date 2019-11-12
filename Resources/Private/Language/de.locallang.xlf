@@ -9,6 +9,18 @@
 			<generator>LFEditor</generator>
 		</header>
 		<body>
+			<trans-unit id="tx_calendarize_domain_model_configuration.end_date_dynamic"><source>End date (dynamic)</source>
+				<target>Enddatum (dynamisch)</target></trans-unit>
+			<trans-unit id="configuration.end_date_dynamic.1day"><source>1 day</source>
+				<target>1 Tag</target></trans-unit>
+			<trans-unit id="configuration.end_date_dynamic.1week"><source>1 week</source>
+				<target>1 Woche</target></trans-unit>
+			<trans-unit id="configuration.end_date_dynamic.end_week"><source>End of week</source>
+				<target>Ende der Woche</target></trans-unit>
+			<trans-unit id="configuration.end_date_dynamic.end_month"><source>End of month</source>
+				<target>Ende des Monats</target></trans-unit>
+			<trans-unit id="configuration.end_date_dynamic.end_year"><source>End of year</source>
+				<target>Ende des Jahres</target></trans-unit>
 			<trans-unit id="all_day" approved="yes">
 				<source>All day</source>
 				<target>ganztägig</target>
@@ -580,6 +592,10 @@
 			<trans-unit id="tx_calendarize_domain_model_configuration.start_date" approved="yes">
 				<source>Start date</source>
 				<target>Startdatum</target>
+			</trans-unit>
+			<trans-unit id="tx_calendarize_domain_model_configuration.with_range_last">
+				<source>Start date (Single dates first)</source>
+				<target>Startdatum (Einzeltermin zuerst)</target>
 			</trans-unit>
 			<trans-unit id="tx_calendarize_domain_model_configuration.start_time" approved="yes">
 				<source>Start time</source>
