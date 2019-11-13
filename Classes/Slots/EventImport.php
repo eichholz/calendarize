@@ -86,17 +86,6 @@ class EventImport
             $this->eventRepository->add($eventObject);
             $commandController->enqueueMessage('Add Event: ' . $eventObject->getTitle(), 'Add');
         } else {
-            $eventObject->getCalendarize()->next();
-            var_dump($eventObject->getCalendarize()->toArray());
-//            foreach ($eventObject->getCalendarize() as $config) {
-//                var_dump($config);
-//                /** @var Configuration $config */
-//                $eventObject->getCalendarize()->detach($config);
-//                echo $config->getUid();
-//                echo "--";
-//            }
-//            $this->persist();
-//            $eventObject->addCalendarize($configuration);
             $this->eventRepository->update($eventObject);
             $commandController->enqueueMessage('Update Event Meta data: ' . $eventObject->getTitle(), 'Update');
         }
@@ -128,19 +117,16 @@ class EventImport
         $configuration->setType(Configuration::TYPE_TIME);
         $configuration->setFrequency(Configuration::FREQUENCY_NONE);
         $configuration->setAllDay(true);
-
         $startTime = clone $startDate;
         $configuration->setStartDate(DateTimeUtility::resetTime($startDate));
         $endTime = clone $endDate;
         $configuration->setEndDate(DateTimeUtility::resetTime($endDate));
-
         $startTime = DateTimeUtility::getDaySecondsOfDateTime($startTime);
         if ($startTime > 0) {
             $configuration->setStartTime($startTime);
             $configuration->setEndTime(DateTimeUtility::getDaySecondsOfDateTime($endTime));
             $configuration->setAllDay(false);
         }
-
         return $configuration;
     }
 
